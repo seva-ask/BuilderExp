@@ -50,7 +50,6 @@ gradle.projectsEvaluated {
     tasks.withType(JavaCompile) {
         options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation" << "-Werror"
     }
-    println android.compileSdkVersion
     tasks.withType(FindBugs) {
         classpath = tasks.getByPath("compileReleaseJava").classpath +\
                     files(System.getenv("ANDROID_HOME") + "/platforms/" + android.compileSdkVersion + "/android.jar") +\
