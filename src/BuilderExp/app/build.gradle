@@ -22,7 +22,7 @@ android {
 dependencies {
     compile project(':libraries:base-library:base-library')
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:22.2.0'
+    compile 'com.android.support:appcompat-v7:22.2.1'
 }
 
 apply from: "${rootDir}/libraries/BuildScripts/gradle/staticAnalysis.gradle"
