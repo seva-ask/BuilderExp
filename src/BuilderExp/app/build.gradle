@@ -25,13 +25,4 @@ dependencies {
     compile 'com.android.support:appcompat-v7:22.2.0'
 }
 
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath 'de.aaschmid.gradle.plugins:gradle-cpd-plugin:0.4'
-    }
-}
-
 apply from: "${rootDir}/libraries/BuildScripts/gradle/staticAnalysis.gradle"
