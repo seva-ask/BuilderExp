@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'findbugs'
+apply plugin: 'checkstyle'
 
 android {
     compileSdkVersion 22
@@ -18,11 +19,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    lintOptions {
-        checkAllWarnings true
-        warningsAsErrors true
-        xmlReport false
-    }
 }
 
 dependencies {
@@ -31,29 +27,69 @@ dependencies {
     compile 'com.android.support:appcompat-v7:22.2.0'
 }
 
+android {
+    lintOptions {
+        checkAllWarnings true
+        warningsAsErrors true
+        xmlReport false
+        lintConfig file("${rootDir}/libraries/BuildScripts/lint/lint.xml")
+    }
+}
+
 task findbugs(type: FindBugs, dependsOn: assembleRelease) {
     ignoreFailures = false
     effort = "max"
-    reportLevel = "high"
-    excludeFilter = new File(System.getenv("FINDBUGS_HOME") + "/filters/findbugs-filter.xml")
+    reportLevel = "low"
+    excludeFilter = file("${rootDir}/libraries/BuildScripts/findbugs/filters/findbugs-filter.xml")
     classes = files("${project.projectDir}/build/intermediates/classes")
     source = fileTree('src/main/java/')
     classpath = files()
     reports {
-        xml.enabled = true
+        xml.enabled = false
+        html.enabled = true
+        html {
+            destination "${project.buildDir}/findbugs/findbugs-output.html"
+        }
+    }
+}
+
+def checkstyleWarningsFile = "${project.buildDir}/checkstyle/checkstyle-output.xml"
+
+task checkstyle(type: Checkstyle, dependsOn: assembleRelease) {
+    ignoreFailures = false
+    showViolations = true
+    configFile file("${rootDir}/libraries/BuildScripts/checkstyle/configuration/google_checks.xml")
+    source fileTree('src/main/java/')
+    checkstyleClasspath = files("${rootDir}/libraries/BuildScripts/checkstyle/checkstyle-6.6/checkstyle-6.6-all-fixed.jar")
+    classpath = files()
+    reports {
         xml {
-            destination "${project.buildDir}/findbugs/findbugs-output.xml"
+            destination checkstyleWarningsFile
+        }
+    }
+    finalizedBy 'verifyNoCheckstyleWarnings'
+}
+
+task verifyNoCheckstyleWarnings(type: GradleBuild) {
+    doLast {
+        File warningsFile = file(checkstyleWarningsFile)
+        if (warningsFile.exists() && warningsFile.text.contains("<error ")) {
+            throw new GradleException("There were checkstyle warnings! For more info see build log.")
         }
     }
 }
 
 gradle.projectsEvaluated {
+    def compileReleaseTask = tasks.matching{it.getName().contains("compile") && it.getName().contains("Release") && it.getName().contains("Java") && !it.getName().contains("UnitTest")}.last()
     tasks.withType(JavaCompile) {
         options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation" << "-Werror"
     }
     tasks.withType(FindBugs) {
-        classpath = tasks.getByPath("compileReleaseJava").classpath +\
+        classpath = compileReleaseTask.classpath +\
                     files(System.getenv("ANDROID_HOME") + "/platforms/" + android.compileSdkVersion + "/android.jar") +\
                     files(System.properties.'java.home' + "/lib/rt.jar")
+    }
+    tasks.withType(Checkstyle) {
+        classpath = compileReleaseTask.classpath
     }
 }
