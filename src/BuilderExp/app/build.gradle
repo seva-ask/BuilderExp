@@ -1,6 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'findbugs'
 apply plugin: 'checkstyle'
+apply plugin: 'pmd'
 
 android {
     compileSdkVersion 22
@@ -47,20 +48,17 @@ task findbugs(type: FindBugs, dependsOn: assembleRelease) {
     reports {
         xml.enabled = false
         html.enabled = true
-        html {
-            destination "${project.buildDir}/findbugs/findbugs-output.html"
-        }
     }
 }
 
-def checkstyleWarningsFile = "${project.buildDir}/checkstyle/checkstyle-output.xml"
+def checkstyleWarningsFile = "${project.buildDir}/reports/checkstyle/checkstyle.xml"
 
 task checkstyle(type: Checkstyle, dependsOn: assembleRelease) {
     ignoreFailures = false
     showViolations = true
     configFile file("${rootDir}/libraries/BuildScripts/checkstyle/configuration/google_checks.xml")
     source fileTree('src/main/java/')
-    checkstyleClasspath = files("${rootDir}/libraries/BuildScripts/checkstyle/checkstyle-6.6/checkstyle-6.6-all-fixed.jar")
+    checkstyleClasspath = fileTree("${rootDir}/libraries/BuildScripts/checkstyle/checkstyle-6.6/")
     classpath = files()
     reports {
         xml {
@@ -74,8 +72,19 @@ task verifyNoCheckstyleWarnings(type: GradleBuild) {
     doLast {
         File warningsFile = file(checkstyleWarningsFile)
         if (warningsFile.exists() && warningsFile.text.contains("<error ")) {
-            throw new GradleException("There were checkstyle warnings! For more info see build log.")
+            throw new GradleException("There are checkstyle warnings! For more info see build log.")
         }
+    }
+}
+
+task pmd(type: Pmd) {
+    pmdClasspath = fileTree("${rootDir}/libraries/BuildScripts/pmd/pmd-bin-5.4.0-SNAPSHOT/lib/")
+    ruleSetFiles = files("${rootDir}/libraries/BuildScripts/pmd/rulesets/java.xml")
+    source fileTree('src/main/java/')
+    ignoreFailures = false
+    reports {
+        xml.enabled = false
+        html.enabled = true
     }
 }
 
