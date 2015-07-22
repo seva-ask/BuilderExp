@@ -1,7 +1,4 @@
 apply plugin: 'com.android.application'
-apply plugin: 'findbugs'
-apply plugin: 'checkstyle'
-apply plugin: 'pmd'
 
 android {
     compileSdkVersion 22
@@ -27,6 +24,20 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.android.support:appcompat-v7:22.2.0'
 }
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'de.aaschmid.gradle.plugins:gradle-cpd-plugin:0.4'
+    }
+}
+
+apply plugin: 'findbugs'
+apply plugin: 'checkstyle'
+apply plugin: 'pmd'
+apply plugin: 'cpd'
 
 android {
     lintOptions {
@@ -58,7 +69,7 @@ task checkstyle(type: Checkstyle, dependsOn: assembleRelease) {
     showViolations = true
     configFile file("${rootDir}/libraries/BuildScripts/checkstyle/configuration/google_checks.xml")
     source fileTree('src/main/java/')
-    checkstyleClasspath = fileTree("${rootDir}/libraries/BuildScripts/checkstyle/checkstyle-6.6/")
+    checkstyleClasspath = fileTree("${rootDir}/libraries/BuildScripts/checkstyle/")
     classpath = files()
     reports {
         xml {
@@ -78,7 +89,7 @@ task verifyNoCheckstyleWarnings(type: GradleBuild) {
 }
 
 task pmd(type: Pmd) {
-    pmdClasspath = fileTree("${rootDir}/libraries/BuildScripts/pmd/pmd-bin-5.4.0-SNAPSHOT/lib/")
+    pmdClasspath = fileTree("${rootDir}/libraries/BuildScripts/pmd/")
     ruleSetFiles = files("${rootDir}/libraries/BuildScripts/pmd/rulesets/java.xml")
     source fileTree('src/main/java/')
     ignoreFailures = false
@@ -86,6 +97,17 @@ task pmd(type: Pmd) {
         xml.enabled = false
         html.enabled = true
     }
+}
+
+cpdCheck {
+    reports {
+        text.enabled = true
+        xml.enabled = false
+        text {
+            destination "${project.buildDir}/reports/cpd/cpd.txt"
+        }
+    }
+    source = fileTree('src/main/java/')
 }
 
 gradle.projectsEvaluated {
