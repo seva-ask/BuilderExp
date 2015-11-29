@@ -1,6 +1,6 @@
 [submodule "src/BuilderExp/libraries/base-library"]
 	path = src/BuilderExp/libraries/base-library
-	url = git@github.com:seva-ask/base-library.git
+	url = git@github.com:TouchInstinct/base-library.git
 [submodule "src/BuilderExp/libraries/BuildScripts"]
 	path = src/BuilderExp/libraries/BuildScripts
 	url = git@github.com:TouchInstinct/BuildScripts.git
